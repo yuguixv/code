@@ -1,0 +1,21 @@
+version: "3"
+services:
+  # --- 服务 A: 我们的 Python 网站 ---
+  web:
+    build: .  # 使用当前目录的 Dockerfile 现场构建镜像
+    ports:
+      - "8000:5000" 
+      # 端口映射详解：
+      # 左边 8000 是宿主机（你的 Ubuntu）端口
+      # 右边 5000 是容器内部端口
+      # 意思是：当有人访问你 Ubuntu 的 8000 时，把流量转发给容器的 5000。
+    volumes:
+      - .:/app
+      # 挂载卷详解 (这一步对开发至关重要)：
+      # 意思是：把你 Ubuntu 当前的代码目录，直接“映射”到容器里的 /app。
+      # 效果：你在 VS Code 里修改了 app.py，容器里会立刻生效，不需要重新构建镜像！
+  
+  # --- 服务 B: Redis 数据库 ---
+  redis:
+    image: "redis:alpine" 
+    # 直接去 Docker Hub 下载官方做好的镜像，不用我们自己写 Dockerfile

@@ -19,7 +19,7 @@ X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.2,
 
 #转换数据
 X_train_t = torch.tensor(X_train, dtype=torch.float32)
-y_train_t = torch.tensor(y_train, dtype=torch.float32).view(-1, 1) # 转换为列向量
+y_train_t = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
 X_val_t = torch.tensor(X_val, dtype=torch.float32)
 y_val_t = torch.tensor(y_val, dtype=torch.float32).view(-1, 1)
 X_test_t = torch.tensor(X_test, dtype=torch.float32)

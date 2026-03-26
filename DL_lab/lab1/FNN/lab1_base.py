@@ -9,15 +9,15 @@ import matplotlib.pyplot as plt
 import copy
 import os
 
-# 加载糖尿病数据集
+# 加载数据集
 diabetes = load_diabetes()
 X, y = diabetes.data, diabetes.target
 
-# 划分数据集为训练集、验证集和测试集
+# 划分数据集
 X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.2, random_state=42)
 
-#转换为 PyTorch Tensor 并修改数据类型为 float32
+#转换数据
 X_train_t = torch.tensor(X_train, dtype=torch.float32)
 y_train_t = torch.tensor(y_train, dtype=torch.float32).view(-1, 1) # 转换为列向量
 X_val_t = torch.tensor(X_val, dtype=torch.float32)
@@ -26,7 +26,7 @@ X_test_t = torch.tensor(X_test, dtype=torch.float32)
 y_test_t = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
 
 
-#创建Dataset、DataLoader (batch大小设置为 16)
+#创建Dataset、DataLoader (batch设置为 16)
 batch_size = 16
 train_dataset = TensorDataset(X_train_t, y_train_t)
 val_dataset = TensorDataset(X_val_t, y_val_t)
@@ -44,13 +44,11 @@ class FNN(nn.Module):
         layers = []
         prev_dim = input_dim
         
-        # 动态构建隐藏层
         for h_dim in hidden_dims:
             layers.append(nn.Linear(prev_dim, h_dim))
             layers.append(activation)
             prev_dim = h_dim
             
-        # 输出层
         layers.append(nn.Linear(prev_dim, output_dim))
         
         self.network = nn.Sequential(*layers)
@@ -96,16 +94,13 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
         epoch_val_loss /= len(val_loader.dataset)
         val_losses.append(epoch_val_loss)
         
-        # 记录并保存最佳模型参数
         if epoch_val_loss < best_val_loss:
             best_val_loss = epoch_val_loss
             best_model_weights = copy.deepcopy(model.state_dict())
             
-        # 打印日志
         if (epoch + 1) % 20 == 0:
             print(f"Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}")
             
-    # 训练结束后，将最好的权重加载回模型
     if best_model_weights is not None:
         model.load_state_dict(best_model_weights)
         

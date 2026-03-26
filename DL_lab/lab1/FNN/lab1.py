@@ -8,10 +8,10 @@ os.makedirs(output_dir, exist_ok=True)
 
 epochs = 1000
 
-# 1.网络深度的影响
-print("实验1：网络深度的影响")
+#1.网络深度的影响
+print("1.网络深度的影响")
 
-# 实验设置：固定学习率 0.001，固定激活函数 ReLU
+#lr=0.001，ReLU
 depth_configs = {
     "Shallow (1 layer)": [64],
     "Medium (2 layers)": [64, 32],
@@ -20,16 +20,11 @@ depth_configs = {
 depth_results = {}
 
 for name, dims in depth_configs.items():
-    print(f"\n---> 当前网络结构: {name}")
+    print(f"\n当前网络结构: {name}")
+
     model = FNN(hidden_dims=dims, activation=nn.ReLU())
-    
-    # 1. 训练与验证
     best_model, t_loss, v_loss = train_model(model, train_loader, val_loader, lr=0.001, epochs=epochs)
-    
-    # 2. 在测试集上评估
     test_l = test_model(best_model, test_loader)
-    
-    # 3. 记录损失用于绘图
     depth_results[name] = {'train': t_loss, 'val': v_loss, 'test': test_l}
 
 # 绘图
@@ -40,23 +35,18 @@ plot_test_comparison("Experiment 1: Network Depth", depth_results, save_filename
 
 #2.学习率的影响
 print("\n")
-print("实验2：学习率的影响")
+print("2.学习率的影响")
 
-# 实验设置：固定网络结构 (2层隐藏层)，固定激活函数 ReLU
+#两层隐藏层，ReLU
 lrs = [0.1, 0.01, 0.001, 0.0001]
 lr_results = {}
 
 for lr in lrs:
-    print(f"\n---> 当前学习率: LR = {lr}")
+    print(f"\n当前学习率: LR = {lr}")
+
     model = FNN(hidden_dims=[64, 32], activation=nn.ReLU())
-    
-    # 1. 训练与验证
     best_model, t_loss, v_loss = train_model(model, train_loader, val_loader, lr=lr, epochs=epochs)
-    
-    # 2. 在测试集上评估
     test_l = test_model(best_model, test_loader)
-    
-    # 3. 记录损失用于绘图
     lr_results[f"LR={lr}"] = {'train': t_loss, 'val': v_loss, 'test': test_l}
 
 # 绘图
@@ -67,9 +57,9 @@ plot_test_comparison("Experiment 2: Learning Rate", lr_results, save_filename="e
 
 #3.激活函数的影响
 print("\n")
-print("实验3：激活函数的影响")
+print("3.激活函数的影响")
 
-# 实验设置：固定网络结构 (2层隐藏层)，固定学习率 0.001
+#2层隐藏层，lr=0.001
 activations = {
     "Sigmoid": nn.Sigmoid(),
     "Tanh": nn.Tanh(),
@@ -80,16 +70,11 @@ activations = {
 act_results = {}
 
 for name, act in activations.items():
-    print(f"\n---> 当前激活函数: {name}")
+    print(f"\n当前激活函数: {name}")
+
     model = FNN(hidden_dims=[64, 32], activation=act)
-    
-    # 1. 训练与验证
     best_model, t_loss, v_loss = train_model(model, train_loader, val_loader, lr=0.001, epochs=epochs)
-    
-    # 2. 在测试集上评估
     test_l = test_model(best_model, test_loader)
-    
-    # 3. 记录损失用于绘图
     act_results[name] = {'train': t_loss, 'val': v_loss, 'test': test_l}
 
 # 绘图

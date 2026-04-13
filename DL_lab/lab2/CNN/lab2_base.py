@@ -8,10 +8,6 @@ import matplotlib.pyplot as plt
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset, random_split
 import numpy as np
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
-
-save_filename = "training_history.png"
 
 # 设置随机种子
 torch.manual_seed(42)
@@ -36,7 +32,6 @@ test_dataset = datasets.MNIST(
     transform=transform
 )
 
-# 随机抽取1%数据
 def get_subset(dataset, ratio=0.1):
     indices = np.random.choice(
         len(dataset), 
@@ -65,7 +60,6 @@ class BaseCNN(nn.Module):
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
         self.pool = nn.MaxPool2d(2)
-        self.dropout = nn.Dropout(0.5)
         self.fc1 = nn.Linear(64 * 12 * 12, 128)
         self.fc2 = nn.Linear(128, 10)
 
@@ -74,7 +68,6 @@ class BaseCNN(nn.Module):
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
-        x = self.dropout(x)
         x = self.fc2(x)
         return x
     
@@ -174,7 +167,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=5, model_name=
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(best_model_wts, model_name)
 
-    print(f"训练完成！最佳验证集准确率: {best_val_acc:.4f}")
+    print(f"Done,最佳验证集准确率: {best_val_acc:.4f}")
     model.load_state_dict(best_model_wts) # 加载最佳权重
     return model, history
 
@@ -220,17 +213,6 @@ def plot_history(history, title, save_filename):
     plt.legend()
     
     plt.tight_layout()
-    plt.savefig(save_filename, dpi=300, bbox_inches='tight') # dpi=300保证图片高清
+    plt.savefig(save_filename, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"训练曲线已保存为: {save_filename}")
-
-def plot_confusion_matrix(labels, preds, save_filename):
-    cm = confusion_matrix(labels, preds)
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.title('Confusion Matrix')
-    plt.savefig(save_filename, dpi=300, bbox_inches='tight')
-    plt.close() 
-    print(f"混淆矩阵已保存为: {save_filename}")

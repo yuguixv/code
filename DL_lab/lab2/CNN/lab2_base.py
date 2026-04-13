@@ -117,7 +117,7 @@ class BatchNormCNN(nn.Module):
 def train_model(model, train_loader, val_loader, lr=0.001, epochs=5, model_name="best_model.pth"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    criterion = nn.CrossEntropyLoss()
+    loss_function = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     history = {'train_loss': [], 'epoch_val_loss': [], 'train_acc': [], 'val_acc': []}
@@ -132,7 +132,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=5, model_name=
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            loss = loss_function(outputs, labels)
             loss.backward()
             optimizer.step()
             epoch_train_loss += loss.item() * inputs.size(0)
@@ -151,7 +151,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=5, model_name=
             for inputs, labels in val_loader:
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
-                loss = criterion(outputs, labels)
+                loss = loss_function(outputs, labels)
                 epoch_val_loss += loss.item() * inputs.size(0)
                 
                 _, predicted = torch.max(outputs, 1)
@@ -199,7 +199,7 @@ def evaluate_model(model, test_loader):
     print(f"测试集最终准确率: {test_acc:.4f}")
     return test_acc, all_labels, all_preds
 
-def plot_history(history, title):
+def plot_history(history, title, save_filename):
     epochs = range(1, len(history['train_loss']) + 1)
     plt.figure(figsize=(12, 4))
     
@@ -224,7 +224,7 @@ def plot_history(history, title):
     plt.close()
     print(f"训练曲线已保存为: {save_filename}")
 
-def plot_confusion_matrix(labels, preds):
+def plot_confusion_matrix(labels, preds, save_filename):
     cm = confusion_matrix(labels, preds)
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')

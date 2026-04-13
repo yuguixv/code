@@ -59,7 +59,7 @@ class FNN(nn.Module):
 #训练模型
 def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
     # 损失函数: 均方误差（MSE）
-    criterion = nn.MSELoss()
+    loss_function = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
     train_losses = []
@@ -74,7 +74,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
         for batch_X, batch_y in train_loader:
             optimizer.zero_grad()
             outputs = model(batch_X)
-            loss = criterion(outputs, batch_y)
+            loss = loss_function(outputs, batch_y)
             loss.backward()
             optimizer.step()
             epoch_train_loss += loss.item() * batch_X.size(0)
@@ -88,7 +88,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
         with torch.no_grad():
             for batch_X, batch_y in val_loader:
                 outputs = model(batch_X)
-                loss = criterion(outputs, batch_y)
+                loss = loss_function(outputs, batch_y)
                 epoch_val_loss += loss.item() * batch_X.size(0)
                 
         epoch_val_loss /= len(val_loader.dataset)
@@ -98,7 +98,7 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
             best_val_loss = epoch_val_loss
             best_model_weights = copy.deepcopy(model.state_dict())
             
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 50 == 0:
             print(f"Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_train_loss:.4f}, Val Loss: {epoch_val_loss:.4f}")
             
     if best_model_weights is not None:
@@ -109,14 +109,14 @@ def train_model(model, train_loader, val_loader, lr=0.001, epochs=100):
 #测试模型
 def test_model(model, test_loader):
     # 损失函数: 均方误差（MSE）
-    criterion = nn.MSELoss()
+    loss_function = nn.MSELoss()
     model.eval()
     test_loss = 0.0
     
     with torch.no_grad():
         for batch_X, batch_y in test_loader:
             outputs = model(batch_X)
-            loss = criterion(outputs, batch_y)
+            loss = loss_function(outputs, batch_y)
             test_loss += loss.item() * batch_X.size(0)
             
     test_loss /= len(test_loader.dataset)

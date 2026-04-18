@@ -68,11 +68,13 @@ VALUES ('B001', 'R003', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NULL);
 --2、
 SELECT ID, name, author
 FROM Book
+WHERE status = 0
 
-SELECT R.ID, R.name, B.ID, B.name
+SELECT R.ID, R.name, B.ID, BW.Borrow_Date
 FROM Reader R
-JOIN Borrow B ON R.ID = B.Reader_ID
-WHERE B.Return_Date IS NULL
+JOIN Borrow BW ON R.ID = BW.Reader_ID
+JOIN Book B ON BW.book_ID = B.ID
+WHERE BW.Return_Date IS NULL
 
 SELECT ID, name
 FROM Reader
@@ -86,14 +88,15 @@ SELECT ID, name, times
 FROM Book
 WHERE times > 10
 
-SELECT R.name, R.ID
-FROM Reader R
-JOIN Borrow B ON R.ID = B.Reader_ID
-WHERE B.book_ID NOT IN (SELECT book_ID 
-                        FROM Borrow     
-                        WHERE Reader_ID IN (SELECT ID 
-                                            FROM Reader 
-                                            WHERE name = '李林'))
+SELECT name, ID
+FROM Reader
+WHERE ID NOT IN (
+    SELECT Reader_ID FROM Borrow 
+    WHERE book_ID IN (
+        SELECT book_ID FROM Borrow
+        WHERE Reader_ID IN (SELECT ID FROM Reader WHERE name = '李林')
+        )
+    ) 
 
 SELECT B.ID, B.name, MAX(BW.borrow_date) AS last_borrow_date
 FROM Book B
@@ -122,7 +125,7 @@ GROUP BY Reader_ID;
 
 
 --3、
-DELIMITER --
+DELIMITER //
 DROP PROCEDURE IF EXISTS SUPERID;
 CREATE PROCEDURE SUPERID (IN OLD_ID CHAR(8), IN NEW_ID CHAR(8))
 BEGIN
@@ -147,12 +150,12 @@ BEGIN
 
         COMMIT;
     END IF;
-END --
+END //
 DELIMITER ;
 
 
 --4、
-DELIMITER --
+DELIMITER //
 DROP PROCEDURE IF EXISTS RETURN_BATCH;
 CREATE PROCEDURE RETURN_BATCH (IN I_Reader_ID CHAR(8), OUT RETURN_COUNT INT)
 BEGIN
@@ -176,32 +179,32 @@ BEGIN
 
         SET RETURN_COUNT = ALL_RETURN_COUNT;
     END IF; 
-END --
+END //
 DELIMITER ;
 
 
 --5、
-DELIMITER --
+DELIMITER //
 DROP TRIGGER IF EXISTS borrow_Book;
 CREATE TRIGGER borrow_Book AFTER INSERT ON Borrow FOR EACH ROW
 BEGIN
     UPDATE Book SET status = 1, times = times + 1 WHERE ID = NEW.book_ID;
-END --
+END //
 DELIMITER ;
 
-DELIMITER --
+DELIMITER //
 DROP TRIGGER IF EXISTS return_book;
 CREATE TRIGGER return_Book AFTER UPDATE ON Borrow FOR EACH ROW
 BEGIN
     IF OLD.Return_Date IS NULL AND NEW.Return_Date IS NOT NULL THEN
         UPDATE Book SET status = 0 WHERE ID = NEW.book_ID;
     END IF;
-END --
+END //
 DELIMITER ;
 
 
 --6、
-DELIMITER --
+DELIMITER //
 DROP TRIGGER IF EXISTS check_borrow_insert;
 CREATE TRIGGER check_borrow_insert BEFORE INSERT ON Borrow FOR EACH ROW
 BEGIN
@@ -222,14 +225,13 @@ BEGIN
     IF same_book_count > 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: This reader has already borrowed this book and has not returned it yet';
     END IF;
-END --
+END //
 DELIMITER ;
 
-DELIMITER --
+DELIMITER //
 DROP TRIGGER IF EXISTS check_borrow_update;
 CREATE TRIGGER check_borrow_update BEFORE UPDATE ON Borrow FOR EACH ROW
 BEGIN
-    DECLARE same_book_count INT;
     IF NEW.Borrow_Date > CURTIME() THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Borrow date cannot be later than the current time';
     END IF;
@@ -237,15 +239,7 @@ BEGIN
     IF NEW.Return_Date IS NOT NULL AND NEW.Return_Date < NEW.Borrow_Date THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Return date cannot be earlier than borrow date';
     END IF;
-
-    SELECT COUNT(*) INTO same_book_count
-    FROM Borrow
-    WHERE book_ID = NEW.book_ID AND Reader_ID = NEW.Reader_ID AND Return_Date IS NULL;
-
-    IF same_book_count > 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: This reader has already borrowed this book and has not returned it yet';
-    END IF;
-END --
+END //
 DELIMITER ;
 
 

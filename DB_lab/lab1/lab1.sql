@@ -1,5 +1,7 @@
-CREATE DATABASE lab1;
-USE lab1
+DROP DATABASE IF EXISTS db2026_lab01;
+
+CREATE DATABASE db2026_lab01;
+USE db2026_lab01
 
 --1、
 CREATE TABLE Book (
@@ -241,34 +243,3 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
-
-
-
---测试
-CALL SUPERID('001234', 'B999');
-
-CALL SUPERID('B002', 'B999');
-SELECT * FROM Book;
-SELECT * FROM Borrow;
-
-
---(R002)目前有两本书没还，执行批量还书
-CALL RETURN_BATCH('R002', @count);
-SELECT @count;
--- 查看张三的借阅记录
-SELECT * FROM Borrow WHERE Reader_ID = 'R002';
--- 查看 B003 和 B004 的状态，status 应该从 1 变回 0
-SELECT * FROM Book WHERE ID IN ('B003', 'B004');
-
-
---测试借书日期晚于当前时间：
-INSERT INTO Borrow (book_ID, Reader_ID, Borrow_Date, Return_Date) 
-VALUES ('B002', 'R003', '2099-01-01', NULL);
-
---测试还书日期早于借书日期：
-UPDATE Borrow SET Return_Date = '2024-01-01' 
-WHERE book_ID = 'B001' AND Reader_ID = 'R003';
-
---测试读者重复借阅同一本尚未归还的书：
-INSERT INTO Borrow (book_ID, Reader_ID, Borrow_Date, Return_Date) 
-VALUES ('B001', 'R003', CURDATE(), NULL);
